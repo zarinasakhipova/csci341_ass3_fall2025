@@ -1,3 +1,9 @@
+databases:
+  - name: caregivers-db
+    databaseName: caregivers_platform
+    user: caregivers_user
+    plan: free
+
 services:
   - type: web
     name: caregivers-platform
@@ -8,3 +14,7 @@ services:
         value: False
       - key: SECRET_KEY
         generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: caregivers-db
+          property: connectionString
