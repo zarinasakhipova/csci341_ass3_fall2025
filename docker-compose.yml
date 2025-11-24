@@ -5,9 +5,9 @@ services:
     build: .
     ports:
       - "5001:5001"
-    env_file:
-      - config.env
     environment:
+      - FLASK_DEBUG=True
+      - SECRET_KEY=dev-secret-key-change-in-production
       - DATABASE_URL=postgresql://caregivers_user:caregivers_password@db:5432/caregivers_platform
     depends_on:
       db:

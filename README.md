@@ -18,5 +18,4 @@ docker-compose up --build
 2. Choose Docker environment
 3. Set DATABASE_URL env var (PostgreSQL URL)
 4. Set SECRET_KEY env var
-5. Set FLASK_DEBUG=False
-6. Deploy
+5. Deploy

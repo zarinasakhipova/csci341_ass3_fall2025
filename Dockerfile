@@ -12,8 +12,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN pip install python-dotenv==1.0.0
-
 RUN useradd --create-home --shell /bin/bash app \
     && chown -R app:app /app
 USER app
