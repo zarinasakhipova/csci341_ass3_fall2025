@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ table_name }} - Caregivers Platform{% endblock %}
+{% block content %}
+<h2>{{ table_name }}</h2>
+<a href="{{ url_for(create_route) }}" class="btn btn-primary">Create New</a>
+<table>
+    <thead>
+        <tr>
+            {% for col in columns %}
+            <th>{{ col.label }}</th>
+            {% endfor %}
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            {% for col in columns %}
+            <td>
+                {% if col.type == 'text_long' %}
+                    {{ (row[col.key][:50] + '...') if row[col.key] and row[col.key]|length > 50 else (row[col.key] or '-') }}
+                {% elif col.type == 'money' %}
+                    ${{ "%.2f"|format(row[col.key]) if row[col.key] else '-' }}
+                {% else %}
+                    {{ row[col.key] or '-' }}
+                {% endif %}
+            </td>
+            {% endfor %}
+            <td style="white-space: nowrap;">
+                <div style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap;">
+                    {% if update_route %}
+                    <a href="{{ url_for(update_route, **{id_key: row[id_field]}) }}" class="btn btn-primary">Update</a>
+                    {% endif %}
+                    {% if composite_key %}
+                    <form method="POST" action="{{ url_for(delete_route, caregiver_user_id=row[id_field], job_id=row[job_id_field]) }}" style="display:inline; margin:0; padding:0; background:none; border:none;" class="delete-form">
+                        <button type="button" class="btn btn-danger" onclick="showDeleteModal(this)">Delete</button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for(delete_route, **{id_key: row[id_field]}) }}" style="display:inline; margin:0; padding:0; background:none; border:none;" class="delete-form">
+                        <button type="button" class="btn btn-danger" onclick="showDeleteModal(this)">Delete</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal-dialog">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete this record? This action cannot be undone.</p>
+        <div class="modal-buttons">
+            <button type="button" class="modal-cancel" onclick="hideDeleteModal()">Cancel</button>
+            <button type="button" class="modal-confirm" onclick="confirmDelete()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let deleteForm = null;
+
+function showDeleteModal(button) {
+    deleteForm = button.closest('form');
+    document.getElementById('deleteModal').classList.add('show');
+}
+
+function hideDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+    deleteForm = null;
+}
+
+function confirmDelete() {
+    if (deleteForm) {
+        deleteForm.submit();
+    }
+    hideDeleteModal();
+}
+
+// Close modal when clicking outside
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideDeleteModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        hideDeleteModal();
+    }
+});
+</script>
+{% endblock %}
+

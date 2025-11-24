@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found - Caregivers Platform{% endblock %}
+{% block content %}
+<div style="text-align: center; padding: 60px 20px;">
+    <div style="font-size: 120px; font-weight: bold; color: #8b5cf6; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
+        404
+    </div>
+    <h2 style="color: #6d28d9; margin-bottom: 15px; font-size: 32px;">Page Not Found</h2>
+    <p style="color: #6b7280; font-size: 18px; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+        Oops! The page you're looking for doesn't exist or has been moved.
+    </p>
+    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('index') }}" class="btn btn-primary" style="font-size: 16px; padding: 12px 30px;">
+            Go to Home
+        </a>
+        <a href="javascript:history.back()" class="btn btn-success" style="font-size: 16px; padding: 12px 30px;">
+            Go Back
+        </a>
+    </div>
+    <div style="margin-top: 50px; padding: 30px; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius: 15px; max-width: 500px; margin-left: auto; margin-right: auto;">
+        <p style="color: #7c3aed; font-size: 16px; margin-bottom: 15px; font-weight: 600;">Quick Links:</p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <a href="{{ url_for('list_users') }}" style="color: #6d28d9; text-decoration: none; padding: 8px; border-radius: 5px; transition: background 0.3s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'">Users</a>
+            <a href="{{ url_for('list_caregivers') }}" style="color: #6d28d9; text-decoration: none; padding: 8px; border-radius: 5px; transition: background 0.3s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'">Caregivers</a>
+            <a href="{{ url_for('list_members') }}" style="color: #6d28d9; text-decoration: none; padding: 8px; border-radius: 5px; transition: background 0.3s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'">Members</a>
+            <a href="{{ url_for('list_jobs') }}" style="color: #6d28d9; text-decoration: none; padding: 8px; border-radius: 5px; transition: background 0.3s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'">Jobs</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

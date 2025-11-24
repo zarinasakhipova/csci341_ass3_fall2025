@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Home - Caregivers Platform{% endblock %}
+{% block content %}
+<h2>Welcome to Caregivers Platform Database Management</h2>
+<p style="color: #6b7280; margin-bottom: 30px;">Select a table to manage:</p>
+
+<div class="home-grid">
+    <a href="{{ url_for('list_users') }}" class="home-card">
+        <div style="font-weight: 600; font-size: 20px; color: #7c3aed; margin-bottom: 10px;">Users</div>
+        <p>Manage user accounts</p>
+    </a>
+    <a href="{{ url_for('list_caregivers') }}" class="home-card">
+        <div style="font-weight: 600; font-size: 20px; color: #7c3aed; margin-bottom: 10px;">Caregivers</div>
+        <p>Manage caregiver profiles</p>
+    </a>
+    <a href="{{ url_for('list_members') }}" class="home-card">
+        <div style="font-weight: 600; font-size: 20px; color: #7c3aed; margin-bottom: 10px;">Members</div>
+        <p>Manage member profiles</p>
+    </a>
+    <a href="{{ url_for('list_addresses') }}" class="home-card">
+        <div style="font-weight: 600; font-size: 20px; color: #7c3aed; margin-bottom: 10px;">Addresses</div>
+        <p>Manage member addresses</p>
+    </a>
+    <a href="{{ url_for('list_jobs') }}" class="home-card">
+        <div style="font-weight: 600; font-size: 20px; color: #7c3aed; margin-bottom: 10px;">Jobs</div>
+        <p>Manage job postings</p>
+    </a>
+    <a href="{{ url_for('list_job_applications') }}" class="home-card">
+        <div style="font-weight: 600; font-size: 20px; color: #7c3aed; margin-bottom: 10px;">Job Applications</div>
+        <p>Manage job applications</p>
+    </a>
+    <a href="{{ url_for('list_appointments') }}" class="home-card">
+        <div style="font-weight: 600; font-size: 20px; color: #7c3aed; margin-bottom: 10px;">Appointments</div>
+        <p>Manage appointments</p>
+    </a>
+</div>
+{% endblock %}

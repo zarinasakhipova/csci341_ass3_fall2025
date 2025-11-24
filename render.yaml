@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: caregivers-platform
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: FLASK_DEBUG
+        value: False
+      - key: SECRET_KEY
+        generateValue: true

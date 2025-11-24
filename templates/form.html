@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} {{ table_name }} - Caregivers Platform{% endblock %}
+{% block content %}
+<h2>{{ action }} {{ table_name }}</h2>
+<form method="POST">
+    {% for field in fields %}
+    <div class="form-group">
+        <label>{{ field.label }}{% if field.required %} *{% endif %}</label>
+        {% if field.type == 'select' %}
+            <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
+                <option value="">Select {{ field.label }}</option>
+                {% for option in field.options %}
+                <option value="{{ option.value }}" {% if field.value == option.value %}selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+            </select>
+        {% elif field.type == 'textarea' %}
+            <textarea name="{{ field.name }}" {% if field.required %}required{% endif %}>{{ field.value or '' }}</textarea>
+        {% elif field.type == 'number' %}
+            <input type="number" name="{{ field.name }}" step="{{ field.step or '1' }}" value="{{ field.value or '' }}" {% if field.required %}required{% endif %}>
+        {% elif field.type == 'date' %}
+            <input type="date" name="{{ field.name }}" value="{{ field.value or '' }}" {% if field.required %}required{% endif %}>
+        {% elif field.type == 'time' %}
+            <input type="time" name="{{ field.name }}" value="{{ field.value or '' }}" {% if field.required %}required{% endif %}>
+        {% elif field.type == 'email' %}
+            <input type="email" name="{{ field.name }}" value="{{ field.value or '' }}" {% if field.required %}required{% endif %}>
+        {% elif field.type == 'password' %}
+            <input type="password" name="{{ field.name }}" value="{{ field.value or '' }}" {% if field.required %}required{% endif %}>
+        {% else %}
+            <input type="text" name="{{ field.name }}" value="{{ field.value or '' }}" {% if field.required %}required{% endif %}>
+        {% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-success">{{ action }}</button>
+    <a href="{{ url_for(list_route) }}" class="btn btn-primary">Cancel</a>
+</form>
+{% endblock %}
+
