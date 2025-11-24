@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
-DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql+psycopg2://postgres:2004@localhost:5432/caregivers_platform')
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://zsakhipo:bvAgkeFr7ON@a1-postgres2.alem.ai:30101/dbposts')
 logger.info(f"Connecting to database: {DATABASE_URL.replace(DATABASE_URL.split('@')[0], '***:***')}")
 
 try:
