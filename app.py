@@ -1,15 +1,110 @@
 
 from flask import Flask, render_template, request, redirect, url_for, flash
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, text, MetaData, Table, Column, Integer, String, Float, Date, Text, Boolean, ForeignKey
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.exc import SQLAlchemyError
 import os
+import logging
+
+# Настройка логирования
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql+psycopg2://postgres:2004@localhost:5432/caregivers_platform')
-engine = create_engine(DATABASE_URL)
-Session = sessionmaker(bind=engine)
+logger.info(f"Connecting to database: {DATABASE_URL.replace(DATABASE_URL.split('@')[0], '***:***')}")
+
+try:
+    engine = create_engine(DATABASE_URL, echo=True)
+    Session = sessionmaker(bind=engine)
+
+    # Создание таблиц если они не существуют
+    with engine.connect() as conn:
+        # Тест подключения
+        conn.execute(text("SELECT 1"))
+
+        # Создание таблиц
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS "USER" (
+                user_id SERIAL PRIMARY KEY,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                given_name VARCHAR(100) NOT NULL,
+                surname VARCHAR(100) NOT NULL,
+                city VARCHAR(100),
+                phone_number VARCHAR(20),
+                profile_description TEXT,
+                password VARCHAR(255) NOT NULL
+            )
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS CAREGIVER (
+                caregiver_user_id INTEGER PRIMARY KEY REFERENCES "USER"(user_id),
+                photo VARCHAR(500),
+                gender VARCHAR(10),
+                caregiving_type VARCHAR(50),
+                hourly_rate DECIMAL(10,2)
+            )
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS MEMBER (
+                member_user_id INTEGER PRIMARY KEY REFERENCES "USER"(user_id),
+                house_rules TEXT,
+                dependent_description TEXT
+            )
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS ADDRESS (
+                member_user_id INTEGER REFERENCES MEMBER(member_user_id),
+                house_number VARCHAR(20),
+                street VARCHAR(200),
+                town VARCHAR(100),
+                PRIMARY KEY (member_user_id)
+            )
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS JOB (
+                job_id SERIAL PRIMARY KEY,
+                member_user_id INTEGER REFERENCES MEMBER(member_user_id),
+                required_caregiving_type VARCHAR(50),
+                other_requirements TEXT,
+                date_posted DATE
+            )
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS JOB_APPLICATION (
+                caregiver_user_id INTEGER REFERENCES CAREGIVER(caregiver_user_id),
+                job_id INTEGER REFERENCES JOB(job_id),
+                date_applied DATE,
+                PRIMARY KEY (caregiver_user_id, job_id)
+            )
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS APPOINTMENT (
+                appointment_id SERIAL PRIMARY KEY,
+                caregiver_user_id INTEGER REFERENCES CAREGIVER(caregiver_user_id),
+                member_user_id INTEGER REFERENCES MEMBER(member_user_id),
+                appointment_date DATE,
+                appointment_time TIME,
+                work_hours INTEGER NOT NULL,
+                status VARCHAR(20) DEFAULT 'pending'
+            )
+        """))
+
+        conn.commit()
+
+    logger.info("Database connection successful and tables created!")
+
+except Exception as e:
+    logger.error(f"Database setup failed: {e}")
+    raise
 
 # Table configurations
 TABLE_CONFIGS = {
@@ -216,7 +311,136 @@ def get_options_from_query(query):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        logger.error(f"Error in index route: {e}")
+        return "Internal Server Error", 500
+
+@app.route('/db-test')
+def db_test():
+    """Тест подключения к базе данных"""
+    try:
+        session = Session()
+        result = session.execute(text("SELECT 1 as test"))
+        row = result.fetchone()
+        session.close()
+
+        db_info = {
+            'status': 'Connected',
+            'test_result': row[0],
+            'database_url': DATABASE_URL.replace(DATABASE_URL.split('@')[0] if '@' in DATABASE_URL else DATABASE_URL, '***:***@')
+        }
+
+        return f"""
+        <h1>Database Test ✅</h1>
+        <pre>{db_info}</pre>
+        <p><a href="/db-init">Initialize Database</a> | <a href="/">← Back to main page</a></p>
+        """, 200
+
+    except Exception as e:
+        logger.error(f"Database test failed: {e}")
+        return f"""
+        <h1>Database Error ❌</h1>
+        <p>Error: {str(e)}</p>
+        <p>DATABASE_URL: {DATABASE_URL.replace(DATABASE_URL.split('@')[0] if '@' in DATABASE_URL else DATABASE_URL, '***:***@')}</p>
+        <p><a href="/db-init">Try to Initialize Database</a> | <a href="/">← Back to main page</a></p>
+        """, 500
+
+@app.route('/db-init')
+def db_init():
+    """Инициализация базы данных"""
+    try:
+        with engine.connect() as conn:
+            # Создание таблиц
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS "USER" (
+                    user_id SERIAL PRIMARY KEY,
+                    email VARCHAR(255) UNIQUE NOT NULL,
+                    given_name VARCHAR(100) NOT NULL,
+                    surname VARCHAR(100) NOT NULL,
+                    city VARCHAR(100),
+                    phone_number VARCHAR(20),
+                    profile_description TEXT,
+                    password VARCHAR(255) NOT NULL
+                )
+            """))
+
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS CAREGIVER (
+                    caregiver_user_id INTEGER PRIMARY KEY REFERENCES "USER"(user_id),
+                    photo VARCHAR(500),
+                    gender VARCHAR(10),
+                    caregiving_type VARCHAR(50),
+                    hourly_rate DECIMAL(10,2)
+                )
+            """))
+
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS MEMBER (
+                    member_user_id INTEGER PRIMARY KEY REFERENCES "USER"(user_id),
+                    house_rules TEXT,
+                    dependent_description TEXT
+                )
+            """))
+
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS ADDRESS (
+                    member_user_id INTEGER REFERENCES MEMBER(member_user_id),
+                    house_number VARCHAR(20),
+                    street VARCHAR(200),
+                    town VARCHAR(100),
+                    PRIMARY KEY (member_user_id)
+                )
+            """))
+
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS JOB (
+                    job_id SERIAL PRIMARY KEY,
+                    member_user_id INTEGER REFERENCES MEMBER(member_user_id),
+                    required_caregiving_type VARCHAR(50),
+                    other_requirements TEXT,
+                    date_posted DATE
+                )
+            """))
+
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS JOB_APPLICATION (
+                    caregiver_user_id INTEGER REFERENCES CAREGIVER(caregiver_user_id),
+                    job_id INTEGER REFERENCES JOB(job_id),
+                    date_applied DATE,
+                    PRIMARY KEY (caregiver_user_id, job_id)
+                )
+            """))
+
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS APPOINTMENT (
+                    appointment_id SERIAL PRIMARY KEY,
+                    caregiver_user_id INTEGER REFERENCES CAREGIVER(caregiver_user_id),
+                    member_user_id INTEGER REFERENCES MEMBER(member_user_id),
+                    appointment_date DATE,
+                    appointment_time TIME,
+                    work_hours INTEGER NOT NULL,
+                    status VARCHAR(20) DEFAULT 'pending'
+                )
+            """))
+
+            conn.commit()
+
+        return f"""
+        <h1>Database Initialized ✅</h1>
+        <p>All tables created successfully!</p>
+        <p><a href="/db-test">Test Connection</a> | <a href="/">← Back to main page</a></p>
+        """, 200
+
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        return f"""
+        <h1>Database Init Failed ❌</h1>
+        <p>Error: {str(e)}</p>
+        <p>DATABASE_URL: {DATABASE_URL.replace(DATABASE_URL.split('@')[0] if '@' in DATABASE_URL else DATABASE_URL, '***:***@')}</p>
+        <p><a href="/db-test">Test Connection</a> | <a href="/">← Back to main page</a></p>
+        """, 500
 
 def create_crud_routes(table_name, config):
     route_name = table_name
@@ -259,6 +483,19 @@ def create_crud_routes(table_name, config):
                                      update_route=update_func_name if id_field else None,
                                      delete_route=delete_func_name,
                                      id_key=id_field, id_field=id_field)
+        except SQLAlchemyError as e:
+            logger.error(f"Database error in {table_name} list: {e}")
+            flash(f'Database error: {str(e)}', 'error')
+            return render_template('list.html',
+                                 rows=[], columns=config['columns'],
+                                 table_name=table_display_name,
+                                 create_route=create_func_name,
+                                 update_route=update_func_name if id_field else None,
+                                 delete_route=delete_func_name,
+                                 id_key=id_field, id_field=id_field)
+        except Exception as e:
+            logger.error(f"Unexpected error in {table_name} list: {e}")
+            return "Internal Server Error", 500
         finally:
             session.close()
     
